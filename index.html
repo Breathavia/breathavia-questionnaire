@@ -109,6 +109,7 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
   .sev-table th,.sev-table td{font-size:11px;padding:7px 4px;}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="page-wrap">
@@ -774,24 +775,281 @@ document.querySelectorAll('input[name="cpap_prescrit"]').forEach(r=>{
 const d=new Date();
 document.getElementById('sig_date').value=d.toISOString().split('T')[0];
 
-document.getElementById('breathavia-form').addEventListener('submit',function(e){
+
+function getVal(name){
+  const els=document.querySelectorAll(`[name="${name}"]`);
+  if(!els.length) return '—';
+  const el=els[0];
+  if(el.type==='checkbox'){
+    const checked=[...document.querySelectorAll(`[name="${name}"]:checked`)].map(e=>e.value);
+    return checked.length?checked.join(', '):'—';
+  }
+  if(el.type==='radio'){
+    const sel=document.querySelector(`[name="${name}"]:checked`);
+    return sel?sel.value:'—';
+  }
+  return el.value||'—';
+}
+function getRadio(name){const sel=document.querySelector(`input[name="${name}"]:checked`);return sel?sel.value:'—';}
+function getChecks(name){const c=[...document.querySelectorAll(`input[name="${name}"]:checked`)].map(e=>e.value);return c.length?c.join(', '):'—';}
+function getSlider(name){const el=document.querySelector(`input[name="${name}"]`);return el?el.value+' / 100':'—';}
+function getNQScore(){let t=0,f=0;for(let i=1;i<=16;i++){const s=document.querySelector(`input[name="nq${i}"]:checked`);if(s){t+=parseInt(s.value);f++;}}return f>0?t+' / 64':'—';}
+function cpZone(s){if(s===''||isNaN(s))return'Non complété';const n=parseInt(s);if(n<10)return'Dysfonction sévère / Severe';if(n<20)return'Dysfonction modérée / Moderate';if(n<30)return'Légère / Mild';if(n>=40)return'Optimal';return'30–39s';}
+
+function generatePDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pW=210,mg=15,cW=pW-mg*2;
+  let y=15;
+  const GOLD=[201,168,76],CHAR=[43,43,43],MID=[107,107,107],CREAM=[250,246,238],WHITE=[255,255,255],BLUE=[191,212,216];
+
+  function chk(n){if(y+n>282){doc.addPage();y=15;}}
+
+  // Header
+  doc.setFillColor(...CHAR);doc.rect(0,0,210,36,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(...GOLD);
+  doc.text('BREATHAVIA',pW/2,13,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...BLUE);
+  doc.text('Rééducation Respiratoire · Respiratory Retraining',pW/2,19,{align:'center'});
+  doc.setFontSize(10);doc.setTextColor(...WHITE);
+  doc.text('Questionnaire d\'accueil / Welcome Questionnaire',pW/2,27,{align:'center'});
+  doc.setFontSize(7);doc.setTextColor(...BLUE);
+  doc.text('Soumis le / Submitted: '+new Date().toLocaleDateString('fr-CA'),pW/2,33,{align:'center'});
+  y=44;
+
+  function secHead(n,t,s){
+    chk(16);
+    doc.setFillColor(...GOLD);doc.circle(mg+3.5,y+3,3.5,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...WHITE);
+    doc.text(String(n),mg+3.5,y+5,{align:'center'});
+    doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(...CHAR);
+    doc.text(t,mg+10,y+5);
+    if(s){doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(...MID);doc.text(s,mg+10,y+10);}
+    doc.setDrawColor(...GOLD);doc.setLineWidth(0.25);doc.line(mg,y+13,pW-mg,y+13);
+    y+=17;
+  }
+
+  function row(label,val,shade){
+    chk(9);
+    if(shade){doc.setFillColor(...CREAM);}else{doc.setFillColor(...WHITE);}
+    doc.rect(mg,y,cW,8,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...MID);
+    doc.text(label,mg+2,y+5.5);
+    doc.setFont('helvetica','bold');doc.setTextColor(...CHAR);
+    const vLines=doc.splitTextToSize(String(val||'—'),cW*0.48);
+    doc.text(vLines,pW-mg-2,y+5.5,{align:'right'});
+    y+=9;
+  }
+
+  function tHead(cols){
+    chk(9);
+    doc.setFillColor(...CHAR);doc.rect(mg,y,cW,8,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...WHITE);
+    const w=cW/cols.length;
+    cols.forEach((c,i)=>doc.text(c,mg+w*i+2,y+5.5));
+    y+=8;
+  }
+
+  function tRow(cells,shade){
+    const rH=8;chk(rH+1);
+    if(shade){doc.setFillColor(244,239,230);}else{doc.setFillColor(...WHITE);}
+    doc.rect(mg,y,cW,rH,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...CHAR);
+    const w=cW/cells.length;
+    cells.forEach((c,i)=>{const l=doc.splitTextToSize(String(c||'—'),w-3);doc.text(l,mg+w*i+2,y+5);});
+    y+=rH;
+  }
+
+  const freqL=['Jamais','Parfois','Souvent','Très souvent'];
+  const sevL=['0 — Absent','1 — Léger','2 — Modéré','3 — Sévère'];
+  const nqL=['Jamais (0)','Rarement (1)','Parfois (2)','Souvent (3)','Très svt (4)'];
+  const sebqL=['Jamais (0)','Parfois (1)','Souvent (2)','Très svt (3)'];
+
+  // S1
+  secHead(1,'Informations personnelles','Personal information');
+  row('Nom / Name',getVal('nom'),true);
+  row('Téléphone / Phone',getVal('tel'),false);
+  row('Courriel / Email',getVal('email'),true);
+  row('Occupation',getVal('occupation'),false);
+  row('Travail exigeant / Demanding work',getChecks('occ_type'),true);
+  y+=3;
+
+  // S2
+  secHead(2,'Motif de consultation','Reason for appointment');
+  row('Symptôme principal / Main symptom',getVal('symptome1'),true);
+  row('Symptôme secondaire / Secondary',getVal('symptome2'),false);
+  row('Année diagnostic / Year diagnosed',getVal('annee_diag'),true);
+  row('Intensité / Severity',getRadio('severity_global'),false);
+  row('Méd. préventeur / Preventer',getVal('med_preventer')+' '+getVal('med_preventer_dose'),true);
+  row('Méd. de secours / Reliever',getVal('med_reliever')+' '+getVal('med_reliever_dose'),false);
+  row('Autres médicaments / Other meds',getVal('autres_med'),true);
+  row('Autres conditions / Other conditions',getVal('autres_cond'),false);
+  y+=3;
+
+  // S3
+  secHead(3,'Pause Contrôle / Control Pause','Steps Test');
+  const cp=getVal('cp_score');
+  row('Score (secondes / seconds)',cp==='—'?'Non complété':cp+'s',true);
+  row('Zone / Category',cpZone(cp),false);
+  y+=3;
+
+  // S4
+  secHead(4,'Habitudes de vie','Lifestyle habits');
+  row('Exercice / semaine / per week',getRadio('exercice'),true);
+  y+=2;
+  tHead(['Habitude / Habit','Fréquence / Frequency']);
+  [['Stress pendant la journée / Stressed during day','stress'],
+   ['Mains ou pieds froids / Cold hands or feet','mains_froids'],
+   ['Bâillements fréquents / Frequent yawning','baillements'],
+   ['Respiration buccale la nuit / Mouth breathing at night','bouche_nuit']
+  ].forEach((s,i)=>{const v=getRadio(s[1]);tRow([s[0],v==='—'?'—':freqL[parseInt(v)]||v],i%2===0);});
+  y+=3;
+  row('Respiration profonde bénéfique? / Deep breathing good?',getRadio('deep_good'),true);
+  row('Limite produits laitiers / Limits dairy',getRadio('laitiers'),false);
+  row('Étude du sommeil / Sleep study done',getRadio('sleep_study'),true);
+  row('CPAP prescrit / CPAP prescribed',getRadio('cpap_prescrit'),false);
+  if(getRadio('cpap_prescrit')==='oui'){
+    row('Utilise CPAP / Uses CPAP',getRadio('cpap_use'),true);
+    row('CPAP aide / CPAP helps',getRadio('cpap_aide'),false);
+    row('Date CPAP',getVal('cpap_date'),true);
+  }
+  row('Hospitalisations (3 ans) / Hospital admissions',getVal('hospit'),false);
+  y+=3;
+
+  // S5
+  secHead(5,'Tableau des symptômes','Symptom severity 0–3');
+  tHead(['Symptôme / Symptom','Sévérité / Severity']);
+  [['Essoufflement au repos / Breathlessness at rest','s_essouf'],
+   ['Asthme à l\'effort / Exercise-induced asthma','s_asthme_effort'],
+   ['Toux / Coughing','s_toux'],
+   ['Sifflements / Wheezing','s_siff'],
+   ['Rhumes fréquents / Frequent colds','s_rhumes'],
+   ['Soupirs fréquents / Frequent sighing','s_soupirs'],
+   ['Bâillements fréquents / Frequent yawning','s_bail'],
+   ['Ronflement / Snoring','s_ronfle'],
+   ['Apnée du sommeil / Sleep apnoea','s_apnee'],
+   ['Insomnie / Broken sleep','s_insomnie'],
+   ['Fatigue / Tiredness','s_fatigue'],
+   ['Stress perçu élevé / High perceived stress','s_stress'],
+   ['Difficultés de concentration / Poor concentration','s_conc'],
+   ['Anxiété / Anxiety','s_anxiete'],
+   ['Attaques de panique / Panic attacks','s_panique'],
+   ['Maux de tête / Headaches','s_tete'],
+   ['Douleurs musculaires / Achy muscles','s_muscles'],
+   ['Troubles digestifs / IBS','s_dig'],
+   ['Transpiration excessive / Excessive sweating','s_sueur'],
+   ['Douleur lombaire / Lower back pain','s_lombaire']
+  ].forEach((s,i)=>{const v=getRadio(s[1]);tRow([s[0],v==='—'?'—':sevL[parseInt(v)]||v],i%2===0);});
+  y+=3;
+
+  // S6
+  secHead(6,'Questionnaire de Nijmegen','');
+  tHead(['Symptôme / Symptom','Fréquence / Frequency']);
+  [['Douleurs thoraciques / Chest wall pains','nq1'],
+   ['Sensation de tension / Feeling tense','nq2'],
+   ['Vision floue / Blurred vision','nq3'],
+   ['Étourdissements / Dizzy spells','nq4'],
+   ['Confusion / Losing contact with reality','nq5'],
+   ['Respiration rapide ou profonde / Fast or deep breathing','nq6'],
+   ['Manque de souffle / Shortness of breath','nq7'],
+   ['Oppression thoracique / Tightness in chest','nq8'],
+   ['Ballonnements / Bloated feelings','nq9'],
+   ['Fourmillements aux doigts / Tingling fingers','nq10'],
+   ['Incapacité à respirer profondément / Unable to breathe deeply','nq11'],
+   ['Raideur doigts/bras / Stiffness fingers or arms','nq12'],
+   ['Raideur autour de la bouche / Stiffness around mouth','nq13'],
+   ['Mains/pieds froids / Cold hands or feet','nq14'],
+   ['Palpitations / Thumping of the heart','nq15'],
+   ['Sentiment d\'anxiété / Feeling of anxiety','nq16']
+  ].forEach((n,i)=>{const v=getRadio(n[1]);tRow([n[0],v==='—'?'—':nqL[parseInt(v)]||v],i%2===0);});
+  chk(12);
+  doc.setFillColor(...BLUE);doc.rect(mg,y,cW,9,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...CHAR);
+  doc.text('Score total / Total score:',mg+2,y+6);
+  doc.text(getNQScore(),pW-mg-2,y+6,{align:'right'});
+  y+=13;
+
+  // S7
+  secHead(7,'Auto-évaluation respiratoire — SEBQ','Courtney & Greenwood, 2009');
+  tHead(['Affirmation / Statement','Fréquence / Frequency']);
+  [['Respiration irrégulière / Breathing irregularly','sebq1'],
+   ['Ne peut reprendre son souffle / Can\'t catch breath','sebq2'],
+   ['Respiration insuffisante / Breath doesn\'t go all the way in','sebq3']
+  ].forEach((s,i)=>{const v=getRadio(s[1]);tRow([s[0],v==='—'?'—':sebqL[parseInt(v)]||v],i%2===0);});
+  y+=3;
+
+  // S8
+  secHead(8,'Maîtrise respiratoire perçue — PBM-S','Darkins, 2024 · Score 0–100');
+  tHead(['Affirmation / Statement','Score']);
+  [['Énergie via respiration / Energy through breathing','pbm1'],
+   ['Contrôle de la respiration / Control breathing','pbm2'],
+   ['Présence dans le moment / Present moment','pbm3'],
+   ['Respiration sans effort / Effortless breathing','pbm4'],
+   ['Respiration nasale au repos / Nasal breathing at rest','pbm5'],
+   ['Confiance au corps / Trust body to breathe','pbm6'],
+   ['Conscience émotionnelle / Breath-emotion awareness','pbm7'],
+   ['Connexion à la vie / Connect more deeply to life','pbm8'],
+   ['Bénéfice conscience respiratoire / Breath awareness benefits life','pbm9']
+  ].forEach((p,i)=>tRow([p[0],getSlider(p[1])],i%2===0));
+  y+=3;
+
+  // S9
+  secHead(9,'Découverte & Questions','How they found Breathavia');
+  row('Source',getChecks('source'),true);
+  chk(24);
+  doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...CHAR);
+  doc.text('Questions / Concerns:',mg,y+5);y+=8;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...MID);
+  const preoc=getVal('preoccupations');
+  doc.splitTextToSize(preoc==='—'?'Aucune / None':preoc,cW).forEach(l=>{chk(6);doc.text(l,mg,y);y+=5;});
+  y+=3;
+
+  // S10
+  secHead(10,'Consentement / Consent','');
+  row('Nom signataire / Signatory name',getVal('sig_nom'),true);
+  row('Date',getVal('sig_date'),false);
+  row('Âge / Age',getVal('sig_age'),true);
+  row('Consentement signé / Consent signed',document.getElementById('consent_check').checked?'Oui / Yes':'Non / No',false);
+  y+=6;
+
+  // Footer
+  chk(22);
+  doc.setDrawColor(...GOLD);doc.setLineWidth(0.25);doc.line(mg,y,pW-mg,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...MID);
+  doc.text('Nijmegen Questionnaire — Van Dixhoorn & Duivenvoorden (1985)',mg,y);y+=4;
+  doc.text('SEBQ — Courtney & Greenwood (2009). International Journal of Osteopathic Medicine.',mg,y);y+=4;
+  doc.text('PBM-S — Darkins, R.J. (2024). Australian Catholic University.',mg,y);y+=4;
+  doc.text('Control Pause — McKeown, P. (2015). The Oxygen Advantage. Hay House.',mg,y);y+=6;
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...GOLD);
+  doc.text('© Breathavia · hello@breathavia.com · breathavia.com',pW/2,y,{align:'center'});
+
+  const nom=(getVal('nom')||'client').replace(/\s+/g,'_');
+  const dt=new Date().toISOString().split('T')[0];
+  doc.save('Breathavia_Questionnaire_'+nom+'_'+dt+'.pdf');
+}
+
+document.getElementById('breathavia-form').addEventListener('submit',async function(e){
+  e.preventDefault();
   if(!document.getElementById('consent_check').checked){
-    e.preventDefault();
     alert('Veuillez cocher la case de consentement avant de soumettre.\nPlease check the consent box before submitting.');
     return;
   }
   calcNijmegen();
-  // Show thank you message after brief delay to allow form submission
-  const btn = document.getElementById('submit-btn');
-  btn.textContent = 'Envoi en cours… / Sending…';
-  btn.disabled = true;
-  btn.style.opacity = '.6';
+  const btn=document.getElementById('submit-btn');
+  btn.textContent='Envoi en cours… / Sending…';
+  btn.disabled=true;btn.style.opacity='.6';
+  try{
+    const fd=new FormData(document.getElementById('breathavia-form'));
+    await fetch('https://api.web3forms.com/submit',{method:'POST',body:fd});
+  }catch(err){console.error('Submit error:',err);}
+  generatePDF();
   setTimeout(function(){
     document.getElementById('breathavia-form').style.display='none';
     document.getElementById('merci-section').style.display='block';
     window.scrollTo({top:0,behavior:'smooth'});
-  }, 1800);
+  },800);
 });
+
 </script>
 </body>
 </html>
