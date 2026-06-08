@@ -1046,28 +1046,18 @@ document.getElementById('breathavia-form').addEventListener('submit',async funct
   btn.disabled=true;btn.style.opacity='.6';
 
   try{
-    // 1. Generate PDF as blob
+    // 1. Generate PDF as base64 string
     const nom=(getVal('nom')||'client').replace(/\s+/g,'_');
     const dt=new Date().toISOString().split('T')[0];
     const filename='Breathavia_Questionnaire_'+nom+'_'+dt+'.pdf';
-    const pdfBlob=generatePDFBlob();
+    const pdfDoc=generatePDF();
+    const pdfBase64=pdfDoc.output('datauristring');
 
-    // 2. Upload to file.io and get download link
-    let downloadLink='(lien non disponible)';
-    try{
-      const fileData=new FormData();
-      fileData.append('file', new File([pdfBlob], filename, {type:'application/pdf'}));
-      fileData.append('expires','7d');
-      fileData.append('maxDownloads','10');
-      const uploadRes=await fetch('https://file.io',{method:'POST',body:fileData});
-      const uploadJson=await uploadRes.json();
-      if(uploadJson.success && uploadJson.link){ downloadLink=uploadJson.link; }
-    }catch(uploadErr){console.error('Upload error:',uploadErr);}
-
-    // 3. Send Web3Forms email with download link
+    // 2. Send Web3Forms with PDF as base64 attachment
     const fd=new FormData(document.getElementById('breathavia-form'));
-    fd.set('PDF_Questionnaire','Telecharger le PDF: '+downloadLink);
-    fd.set('Nom_Client',getVal('nom'));
+    fd.set('Nom_Client', getVal('nom'));
+    fd.set('Score_Nijmegen_Final', document.getElementById('hidden_nq_score').value||'—');
+    fd.append('attachment[]', new File([pdfDoc.output('blob')], filename, {type:'application/pdf'}));
     await fetch('https://api.web3forms.com/submit',{method:'POST',body:fd});
 
   }catch(err){console.error('Submit error:',err);}
