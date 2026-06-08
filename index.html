@@ -110,7 +110,6 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 <div class="page-wrap">
@@ -130,7 +129,7 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
   </div>
 </header>
 
-<form id="breathavia-form" action="https://api.web3forms.com/submit" method="POST" novalidate>
+<form id="breathavia-form" action="#" method="POST" novalidate>
 <input type="hidden" name="access_key" value="a80162de-feb2-4fe2-a723-b7bcfdc963ca">
 <input type="hidden" name="subject" value="Nouveau questionnaire client Breathavia">
 <input type="hidden" name="from_name" value="Breathavia Questionnaire">
@@ -1055,21 +1054,25 @@ document.getElementById('breathavia-form').addEventListener('submit',async funct
   btn.disabled=true;btn.style.opacity='.6';
 
   try{
-    // 1. Initialize EmailJS
-    emailjs.init('KgZWhuljJ58qBUytT');
+    // 1. Collecter toutes les données du formulaire
+    const formEl=document.getElementById('breathavia-form');
+    const formData=new FormData(formEl);
+    const data={};
+    formData.forEach((v,k)=>{
+      if(data[k]){data[k]=data[k]+', '+v;}
+      else{data[k]=v;}
+    });
+    data['Score_Nijmegen']=document.getElementById('hidden_nq_score').value||'—';
 
-    // 2. Generate PDF as base64
-    const nom=getVal('nom')||'client';
-    const dt=new Date().toLocaleDateString('fr-CA');
-    const pdfDoc=generatePDF();
-    const pdfBase64=pdfDoc.output('datauristring');
+    // 2. Générer et télécharger le PDF localement
+    generatePDF();
 
-    // 3. Send email with PDF as attachment via EmailJS
-    await emailjs.send('service_ul8f35z', 'template_hhpc1b9', {
-      client_nom: nom,
-      client_email: getVal('email'),
-      date_soumission: dt,
-      pdf_attachment: pdfBase64
+    // 3. Envoyer les données à Google Apps Script
+    fetch('https://script.google.com/macros/s/AKfycbxsleFZZ60kwhQsh00ALwqoZhZaQWVt4GEZzRNQEQLsR0IZPCHWNSDaCLUVDJm96zd5/exec',{
+      method:'POST',
+      mode:'no-cors',
+      body:JSON.stringify(data),
+      headers:{'Content-Type':'application/json'}
     });
 
   }catch(err){console.error('Submit error:',err);}
