@@ -1026,6 +1026,12 @@ function generatePDF(){
   const nom=(getVal('nom')||'client').replace(/\s+/g,'_');
   const dt=new Date().toISOString().split('T')[0];
   doc.save('Breathavia_Questionnaire_'+nom+'_'+dt+'.pdf');
+  return doc;
+}
+
+function generatePDFBlob(){
+  const doc=generatePDF();
+  return doc ? doc.output('blob') : null;
 }
 
 document.getElementById('breathavia-form').addEventListener('submit',async function(e){
@@ -1038,11 +1044,35 @@ document.getElementById('breathavia-form').addEventListener('submit',async funct
   const btn=document.getElementById('submit-btn');
   btn.textContent='Envoi en cours… / Sending…';
   btn.disabled=true;btn.style.opacity='.6';
+
   try{
+    // 1. Generate PDF as blob
+    const nom=(getVal('nom')||'client').replace(/\s+/g,'_');
+    const dt=new Date().toISOString().split('T')[0];
+    const filename='Breathavia_Questionnaire_'+nom+'_'+dt+'.pdf';
+    const pdfBlob=generatePDFBlob();
+
+    // 2. Upload to file.io and get download link
+    let downloadLink='(lien non disponible)';
+    try{
+      const fileData=new FormData();
+      fileData.append('file', new File([pdfBlob], filename, {type:'application/pdf'}));
+      fileData.append('expires','7d');
+      fileData.append('maxDownloads','10');
+      const uploadRes=await fetch('https://file.io',{method:'POST',body:fileData});
+      const uploadJson=await uploadRes.json();
+      if(uploadJson.success && uploadJson.link){ downloadLink=uploadJson.link; }
+    }catch(uploadErr){console.error('Upload error:',uploadErr);}
+
+    // 3. Send Web3Forms email with download link
     const fd=new FormData(document.getElementById('breathavia-form'));
+    fd.set('PDF_Questionnaire','Telecharger le PDF: '+downloadLink);
+    fd.set('Nom_Client',getVal('nom'));
     await fetch('https://api.web3forms.com/submit',{method:'POST',body:fd});
+
   }catch(err){console.error('Submit error:',err);}
-  generatePDF();
+
+  // 4. Show thank you
   setTimeout(function(){
     document.getElementById('breathavia-form').style.display='none';
     document.getElementById('merci-section').style.display='block';
