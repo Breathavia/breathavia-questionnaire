@@ -110,6 +110,7 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 <div class="page-wrap">
@@ -727,13 +728,21 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
   </svg>
   <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--gold);letter-spacing:.03em;margin-bottom:8px;">Merci!</div>
   <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--dusty-blue);margin-bottom:24px;">Thank you!</div>
-  <div style="color:#d6cfc5;font-size:14.5px;line-height:1.8;max-width:480px;margin:0 auto;">
+  <div style="color:#d6cfc5;font-size:14.5px;line-height:1.9;max-width:520px;margin:0 auto;">
     Votre questionnaire a bien été reçu. Adnan le consultera avant votre séance afin de personnaliser votre accompagnement.<br><br>
     <em style="color:#a09888;font-size:13px;">Your questionnaire has been received. Adnan will review it before your session to personalize your support.</em>
   </div>
+  <div style="margin:32px auto 0;max-width:520px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:24px 28px;text-align:left;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:#C9A84C;margin-bottom:10px;">Une derniere etape / One last step</div>
+    <div style="color:#d6cfc5;font-size:13.5px;line-height:1.8;">
+      Un PDF de votre questionnaire vient d'etre telecharge sur votre appareil. Veuillez le retrouver dans vos telechargements et l'envoyer par courriel a:<br>
+      <a href="mailto:hello@breathavia.com" style="color:#C9A84C;font-weight:500;text-decoration:none;">hello@breathavia.com</a><br><br>
+      <em style="color:#a09888;font-size:12.5px;">A PDF of your questionnaire has just been downloaded to your device. Please find it in your downloads folder and email it to: <a href="mailto:hello@breathavia.com" style="color:#C9A84C;text-decoration:none;">hello@breathavia.com</a></em>
+    </div>
+  </div>
   <div style="margin-top:32px;padding-top:24px;border-top:1px solid rgba(201,168,76,.2);">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Breathavia</div>
-    <div style="font-size:12px;color:#6b6358;letter-spacing:.1em;">Rééducation Respiratoire · Respiratory Retraining</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#C9A84C;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Breathavia</div>
+    <div style="font-size:12px;color:#6b6358;letter-spacing:.1em;">Reeducation Respiratoire · Respiratory Retraining</div>
   </div>
 </div>
 
@@ -1046,19 +1055,22 @@ document.getElementById('breathavia-form').addEventListener('submit',async funct
   btn.disabled=true;btn.style.opacity='.6';
 
   try{
-    // 1. Generate PDF as base64 string
-    const nom=(getVal('nom')||'client').replace(/\s+/g,'_');
-    const dt=new Date().toISOString().split('T')[0];
-    const filename='Breathavia_Questionnaire_'+nom+'_'+dt+'.pdf';
+    // 1. Initialize EmailJS
+    emailjs.init('KgZWhuljJ58qBUytT');
+
+    // 2. Generate PDF as base64
+    const nom=getVal('nom')||'client';
+    const dt=new Date().toLocaleDateString('fr-CA');
     const pdfDoc=generatePDF();
     const pdfBase64=pdfDoc.output('datauristring');
 
-    // 2. Send Web3Forms with PDF as base64 attachment
-    const fd=new FormData(document.getElementById('breathavia-form'));
-    fd.set('Nom_Client', getVal('nom'));
-    fd.set('Score_Nijmegen_Final', document.getElementById('hidden_nq_score').value||'—');
-    fd.append('attachment[]', new File([pdfDoc.output('blob')], filename, {type:'application/pdf'}));
-    await fetch('https://api.web3forms.com/submit',{method:'POST',body:fd});
+    // 3. Send email with PDF as attachment via EmailJS
+    await emailjs.send('service_ul8f35z', 'template_hhpc1b9', {
+      client_nom: nom,
+      client_email: getVal('email'),
+      date_soumission: dt,
+      pdf_attachment: pdfBase64
+    });
 
   }catch(err){console.error('Submit error:',err);}
 
