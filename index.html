@@ -782,7 +782,11 @@ document.querySelectorAll('input[name="cpap_prescrit"]').forEach(r=>{
 });
 
 const d=new Date();
-document.getElementById('sig_date').value=d.toISOString().split('T')[0];
+const dateAujourdhui=new Date();
+const yyyy=dateAujourdhui.getFullYear();
+const mm=String(dateAujourdhui.getMonth()+1).padStart(2,'0');
+const dd=String(dateAujourdhui.getDate()).padStart(2,'0');
+document.getElementById('sig_date').value=yyyy+'-'+mm+'-'+dd;
 
 
 function getVal(name){
