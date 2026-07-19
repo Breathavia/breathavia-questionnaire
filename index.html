@@ -730,12 +730,13 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
     Votre questionnaire a bien été reçu. Adnan le consultera avant votre séance afin de personnaliser votre accompagnement.<br><br>
     <em style="color:#a09888;font-size:13px;">Your questionnaire has been received. Adnan will review it before your session to personalize your support.</em>
   </div>
-  <div style="margin:32px auto 0;max-width:520px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:24px 28px;text-align:left;">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:#C9A84C;margin-bottom:10px;">Une derniere etape / One last step</div>
-    <div style="color:#d6cfc5;font-size:13.5px;line-height:1.8;">
-      Un PDF de votre questionnaire vient d'etre telecharge sur votre appareil. Veuillez le retrouver dans vos telechargements et l'envoyer par courriel a:<br>
-      <a href="mailto:hello@breathavia.com" style="color:#C9A84C;font-weight:500;text-decoration:none;">hello@breathavia.com</a><br><br>
-      <em style="color:#a09888;font-size:12.5px;">A PDF of your questionnaire has just been downloaded to your device. Please find it in your downloads folder and email it to: <a href="mailto:hello@breathavia.com" style="color:#C9A84C;text-decoration:none;">hello@breathavia.com</a></em>
+  <div style="margin:28px auto 0;max-width:520px;text-align:center;">
+    <button id="btn-pdf" style="display:none;background:transparent;border:1px solid #C9A84C;color:#C9A84C;padding:12px 32px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:.06em;cursor:pointer;margin-bottom:10px;">
+      &#8595; Télécharger mon questionnaire en PDF · Download PDF
+    </button>
+    <div id="btn-pdf-note" style="display:none;color:#a09888;font-size:12px;line-height:1.6;">
+      Optionnel — votre bilan vous sera envoyé par courriel automatiquement.<br>
+      <em>Optional — your assessment will be sent to you by email automatically.</em>
     </div>
   </div>
   <div style="margin-top:32px;padding-top:24px;border-top:1px solid rgba(201,168,76,.2);">
@@ -1064,11 +1065,8 @@ document.getElementById('breathavia-form').addEventListener('submit',async funct
     });
     data['Score_Nijmegen']=document.getElementById('hidden_nq_score').value||'—';
 
-    // 2. Générer et télécharger le PDF localement
-    generatePDF();
-
-    // 3. Envoyer les données à Google Apps Script
-        fetch('https://script.google.com/macros/s/AKfycbz5ByaQ1w_Gthwn7tStmMuBsKVRF-T799oY2igAbLXTPsMkxMDBMu6biUiWuPUZnKo/exec',{
+    // 2. Envoyer les données à Google Apps Script EN PREMIER
+    await fetch('https://script.google.com/macros/s/AKfycbz5ByaQ1w_Gthwn7tStmMuBsKVRF-T799oY2igAbLXTPsMkxMDBMu6biUiWuPUZnKo/exec',{
       method:'POST',
       mode:'no-cors',
       body:JSON.stringify(data),
@@ -1077,12 +1075,22 @@ document.getElementById('breathavia-form').addEventListener('submit',async funct
 
   }catch(err){console.error('Submit error:',err);}
 
-  // 4. Show thank you
-  setTimeout(function(){
-    document.getElementById('breathavia-form').style.display='none';
-    document.getElementById('merci-section').style.display='block';
-    window.scrollTo({top:0,behavior:'smooth'});
-  },800);
+  // 3. Afficher le message de remerciement
+  document.getElementById('breathavia-form').style.display='none';
+  document.getElementById('merci-section').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // 4. Activer le bouton PDF optionnel
+  var btnPdf = document.getElementById('btn-pdf');
+  var btnNote = document.getElementById('btn-pdf-note');
+  if(btnPdf){
+    btnPdf.style.display='inline-block';
+    if(btnNote) btnNote.style.display='block';
+    btnPdf.addEventListener('click',function(){
+      try{ generatePDF(); }catch(err){ console.error('PDF error:',err); }
+    });
+  }
+
 });
 
 </script>
