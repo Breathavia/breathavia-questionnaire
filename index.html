@@ -109,8 +109,56 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
   .sev-table th,.sev-table td{font-size:11px;padding:7px 4px;}
 }
 </style>
+<style>
+/* Language toggle */
+.lang-toggle{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px;}
+.lang-btn{padding:8px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;border:1px solid rgba(201,168,76,.4);background:transparent;color:#a09888;cursor:pointer;transition:all .2s;}
+.lang-btn:first-child{border-radius:4px 0 0 4px;border-right:none;}
+.lang-btn:last-child{border-radius:0 4px 4px 0;}
+.lang-btn.active{background:var(--gold);color:var(--charcoal);border-color:var(--gold);}
+
+/* Hide secondary language text based on active lang */
+body.lang-fr .hide-fr{display:none!important;}
+body.lang-en .hide-en{display:none!important;}
+
+/* In EN mode: make em tags the primary label text */
+body.lang-en .field label em,
+body.lang-en .radio-group label em,
+body.lang-en .sebq-item label em{
+  display:block!important;
+  font-style:normal!important;
+  font-weight:500!important;
+  color:var(--charcoal)!important;
+  font-size:13.5px!important;
+  margin-top:0!important;
+}
+/* In EN mode: visually de-emphasize French label text */
+body.lang-en .field label > span:first-child,
+body.lang-en .field > label{
+  font-weight:300;
+  color:var(--mid);
+  font-size:12px;
+}
+/* Table cells EN mode */
+body.lang-en .freq-table .en,
+body.lang-en .sev-table .en{
+  display:block!important;
+  font-style:normal!important;
+  font-weight:500!important;
+  color:var(--charcoal)!important;
+  font-size:13px!important;
+}
+body.lang-en .freq-table td:first-child,
+body.lang-en .sev-table td:first-child{
+  font-size:11px;
+  color:var(--mid);
+}
+/* Section subtitles */
+body.lang-en .section-title{color:var(--mid);font-size:16px;}
+body.lang-en .section-subtitle{color:var(--charcoal);font-size:14px;font-weight:500;}
+</style>
 </head>
-<body>
+<body class="lang-fr">
 <div class="page-wrap">
 
 <header>
@@ -119,12 +167,17 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
     <path d="M24 8 C10 16 10 32 24 40 C38 32 38 16 24 8Z" stroke="#C9A84C" stroke-width="1.2" fill="none"/>
     <circle cx="24" cy="24" r="3" fill="#C9A84C" opacity=".9"/>
   </svg>
-  <h1>Questionnaire d'accueil Breathavia</h1>
-  <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--dusty-blue);margin-bottom:6px;letter-spacing:.02em;">Breathavia Welcome Questionnaire</div>
-  <div class="tagline">Rééducation Respiratoire · Respiratory Retraining</div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="btn-fr" onclick="setLang('fr')">Français</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">English</button>
+  </div>
+  <h1 class="hide-en">Questionnaire d'accueil Breathavia</h1>
+  <h1 class="hide-fr">Breathavia Welcome Questionnaire</h1>
+  <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--dusty-blue);margin-bottom:6px;letter-spacing:.02em;" class="hide-en">Rééducation Respiratoire · Respiratory Retraining</div>
+  <div class="tagline hide-fr">Respiratory Retraining · Rééducation Respiratoire</div>
   <div class="intro-box">
-    <strong>Merci de votre réservation.</strong> Ce formulaire me permet de mieux vous connaître avant votre séance et d'adapter mon accompagnement à votre profil respiratoire. Vos réponses sont confidentielles et utilisées uniquement dans le cadre de votre suivi.<br><br>
-    <strong style="color:var(--gold-light);">Thank you for booking.</strong> This form helps me get to know you before your session and tailor my support to your respiratory profile. Your answers are confidential and used solely within the context of your follow-up.
+    <span class="hide-en"><strong>Merci de votre réservation.</strong> Ce formulaire me permet de mieux vous connaître avant votre séance et d'adapter mon accompagnement à votre profil respiratoire. Vos réponses sont confidentielles et utilisées uniquement dans le cadre de votre suivi.</span>
+    <span class="hide-fr"><br><strong style="color:var(--gold-light);">Thank you for booking.</strong> This form helps me get to know you before your session and tailor my support to your respiratory profile. Your answers are confidential and used solely within the context of your follow-up.</span>
   </div>
 </header>
 
@@ -133,6 +186,7 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
 <input type="hidden" name="subject" value="Nouveau questionnaire client Breathavia">
 <input type="hidden" name="from_name" value="Breathavia Questionnaire">
 <input type="hidden" name="redirect" value="false">
+<input type="hidden" name="langue" id="hidden_langue" value="fr">
 
 <input type="hidden" name="Score_Nijmegen" id="hidden_nq_score" value="">
 
@@ -148,22 +202,22 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
 
   <div class="row-2">
     <div class="field">
-      <label for="nom">Nom complet <span class="req">*</span><em>Full name</em></label>
+      <label for="nom"><span class="hide-en">Nom complet</span><span class="hide-fr">Full name</span> <span class="req">*</span></label>
       <input type="text" id="nom" name="nom" required placeholder="Prénom Nom / First Last">
     </div>
     <div class="field">
-      <label for="tel">Numéro de téléphone<em>Phone number</em></label>
+      <label for="tel"><span class="hide-en">Numéro de téléphone</span><span class="hide-fr">Phone number</span></label>
       <input type="tel" id="tel" name="tel" placeholder="514-000-0000">
     </div>
   </div>
 
   <div class="field">
-    <label for="email">Adresse courriel <span class="req">*</span><em>Email address</em></label>
+    <label for="email"><span class="hide-en">Adresse courriel</span><span class="hide-fr">Email address</span> <span class="req">*</span></label>
     <input type="email" id="email" name="email" required placeholder="vous@exemple.com">
   </div>
 
   <div class="field">
-    <label for="occupation">Occupation / Profession<em>What do you do for work?</em></label>
+    <label for="occupation">Occupation / Profession</label>
     <input type="text" id="occupation" name="occupation" placeholder="Ex: enseignant, avocat, athlète…">
   </div>
 
@@ -761,6 +815,18 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+function setLang(lang){
+  document.body.className='lang-'+lang;
+  document.getElementById('btn-fr').className='lang-btn'+(lang==='fr'?' active':'');
+  document.getElementById('btn-en').className='lang-btn'+(lang==='en'?' active':'');
+  document.getElementById('hidden_langue').value=lang;
+  try{localStorage.setItem('breathavia_lang',lang);}catch(e){}
+}
+// Restore saved language preference
+(function(){
+  try{var l=localStorage.getItem('breathavia_lang');if(l)setLang(l);}catch(e){}
+})();
+
 function calcNijmegen(){
   let total=0,filled=0;
   for(let i=1;i<=16;i++){
@@ -1070,7 +1136,7 @@ document.getElementById('breathavia-form').addEventListener('submit',async funct
     data['Score_Nijmegen']=document.getElementById('hidden_nq_score').value||'—';
 
     // 2. Envoyer les données à Google Apps Script EN PREMIER
-    await fetch('https://script.google.com/macros/s/AKfycby9q7vT92TDF_C85i_LmB3OV1bndpgKbXJrTsZssCa335-dFhPGjGwg6ePUbOdXquI/exec',{
+    await fetch('https://script.google.com/macros/s/AKfycbyS8M_eRn3nXfOi0YbtMIyLrxkjf0vnWUNDUOEbnQqjlDU3fYQ-PryvxBZRLk6hixg/exec',{
       method:'POST',
       mode:'no-cors',
       body:JSON.stringify(data),
