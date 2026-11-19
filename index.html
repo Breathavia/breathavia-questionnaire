@@ -300,7 +300,7 @@ body.lang-en .section-subtitle{color:var(--charcoal);font-size:14px;font-weight:
   <div class="section-header">
     <div class="section-num">3</div>
     <div>
-      <div class="section-title">Indice de confort respiratoire (Step Test)</div>
+      <div class="section-title">Indice de confort respiratoire</div>
       <div class="section-subtitle">Évaluation fonctionnelle de la respiration · Functional breathing assessment</div>
     </div>
   </div>
@@ -968,7 +968,7 @@ function generatePDF(){
   y+=3;
 
   // S3
-  secHead(3,'Indice de confort respiratoire (Step Test)','Breathing Comfort Index');
+  secHead(3,'Indice de confort respiratoire','Breathing Comfort Index');
   const cp=getVal('cp_score');
   row('Score (secondes / seconds)',cp==='—'?'Non complété':cp+'s',true);
   row('Zone / Category',cpZone(cp),false);
