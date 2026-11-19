@@ -81,6 +81,15 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
 .z-yellow{background:#FEFCE8;color:#6B5500;}
 .z-green{background:#EDFBF3;color:#1A5C38;}
 .z-teal{background:#E3F4EF;color:#0F5A45;}
+.chrono{margin:16px 0 12px;padding:16px;background:var(--white);border:1px solid var(--border);border-radius:6px;text-align:center;}
+.chrono-display{font-size:40px;font-weight:500;letter-spacing:.04em;color:var(--charcoal);font-variant-numeric:tabular-nums;margin-bottom:10px;}
+.chrono-display small{font-size:16px;color:var(--mid);margin-left:4px;}
+.chrono-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.chrono-btn{border:none;border-radius:4px;padding:12px 28px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;min-width:140px;}
+.chrono-start{background:var(--gold);color:var(--charcoal);}
+.chrono-start.running{background:var(--charcoal);color:var(--white);}
+.chrono-reset{background:var(--section-bg);color:var(--mid);}
+.chrono-hint{font-size:12px;color:var(--mid);margin-top:10px;}
 .sebq-item{background:var(--section-bg);border-radius:6px;padding:14px 16px;margin-bottom:10px;}
 .sebq-item label{font-size:13.5px;font-weight:400;margin-bottom:10px;display:block;color:var(--charcoal);}
 .sebq-item label em{display:block;font-size:12px;color:var(--mid);margin-top:3px;font-style:italic;}
@@ -311,9 +320,17 @@ body.lang-en .section-subtitle{color:var(--charcoal);font-size:14px;font-weight:
     <div class="cp-protocol">
       <strong>Protocole / Protocol:</strong><br>
       1. Respirez normalement par le nez pendant 1–2 minutes. <em style="font-size:12px;color:var(--mid)">Breathe normally through your nose for 1–2 minutes.</em><br>
-      2. Après une <strong>expiration normale</strong> (pas vidée), pincez le nez avec les doigts. <em style="font-size:12px;color:var(--mid)">After a normal exhale (not fully emptied), pinch your nose.</em><br>
-      3. Comptez jusqu'au <strong>premier besoin net de respirer</strong> — pas au maximum. <em style="font-size:12px;color:var(--mid)">Count seconds until the first definite urge to breathe — not maximum.</em><br>
+      2. Après une <strong>expiration normale</strong> (pas vidée), pincez le nez avec les doigts et <strong>démarrez le chrono</strong>. <em style="font-size:12px;color:var(--mid)">After a normal exhale (not fully emptied), pinch your nose and start the timer.</em><br>
+      3. Arrêtez le chrono au <strong>premier besoin net de respirer</strong>, pas au maximum. <em style="font-size:12px;color:var(--mid)">Stop the timer at the first definite urge to breathe, not at your maximum.</em><br>
       4. Relâchez et reprenez calmement. Si vous devez respirer profondément, vous avez attendu trop longtemps. <em style="font-size:12px;color:var(--mid)">Release and resume calmly. If you need a deep breath, you waited too long.</em>
+    </div>
+    <div class="chrono">
+      <div class="chrono-display" id="chrono-display">0.0<small>s</small></div>
+      <div class="chrono-btns">
+        <button type="button" class="chrono-btn chrono-start" id="chrono-start">Démarrer / Start</button>
+        <button type="button" class="chrono-btn chrono-reset" id="chrono-reset">Recommencer / Reset</button>
+      </div>
+      <div class="chrono-hint">Le résultat s'inscrit automatiquement ci-dessous. Vous pouvez aussi l'entrer à la main.<br><em>The result fills in automatically below. You can also enter it manually.</em></div>
     </div>
     <div class="cp-input-row">
       <input type="number" id="cp_score" name="cp_score" min="0" max="120" placeholder="—">
@@ -875,6 +892,34 @@ function getRadio(name){const sel=document.querySelector(`input[name="${name}"]:
 function getChecks(name){const c=[...document.querySelectorAll(`input[name="${name}"]:checked`)].map(e=>e.value);return c.length?c.join(', '):'—';}
 function getSlider(name){const el=document.querySelector(`input[name="${name}"]`);return el?el.value+' / 100':'—';}
 function getNQScore(){let t=0,f=0;for(let i=1;i<=16;i++){const s=document.querySelector(`input[name="nq${i}"]:checked`);if(s){t+=parseInt(s.value);f++;}}return f>0?t+' / 64':'—';}
+(function(){
+  var t0=null,raf=null,running=false;
+  var disp=document.getElementById('chrono-display'),
+      bStart=document.getElementById('chrono-start'),
+      bReset=document.getElementById('chrono-reset'),
+      champ=document.getElementById('cp_score');
+  if(!disp||!bStart||!bReset||!champ)return;
+  function afficher(sec){disp.innerHTML=sec.toFixed(1)+'<small>s</small>';}
+  function boucle(){afficher((performance.now()-t0)/1000);raf=requestAnimationFrame(boucle);}
+  bStart.addEventListener('click',function(){
+    if(!running){
+      running=true;t0=performance.now();boucle();
+      bStart.textContent='Arrêter / Stop';bStart.classList.add('running');
+    }else{
+      running=false;cancelAnimationFrame(raf);
+      var sec=(performance.now()-t0)/1000;afficher(sec);
+      champ.value=Math.round(sec);
+      champ.dispatchEvent(new Event('input',{bubbles:true}));
+      champ.dispatchEvent(new Event('change',{bubbles:true}));
+      bStart.textContent='Démarrer / Start';bStart.classList.remove('running');
+    }
+  });
+  bReset.addEventListener('click',function(){
+    running=false;cancelAnimationFrame(raf);afficher(0);champ.value='';
+    bStart.textContent='Démarrer / Start';bStart.classList.remove('running');
+  });
+})();
+
 function cpZone(s){if(s===''||isNaN(s))return'Non complété / Not completed';const n=parseInt(s);if(n<10)return'Point de départ / Starting point';if(n<20)return'À développer / Developing';if(n<30)return'Intermédiaire / Intermediate';if(n<40)return'Bon / Good';return'Très bon / Very good';}
 
 function generatePDF(){
