@@ -73,13 +73,14 @@ header .tagline{font-size:12px;color:var(--dusty-blue);letter-spacing:.12em;text
 .cp-input-row input{width:100px;padding:10px 13px;border:1px solid var(--border);border-radius:5px;font-size:22px;font-weight:500;text-align:center;background:var(--cream);color:var(--charcoal);font-family:'DM Sans',sans-serif;outline:none;}
 .cp-input-row input:focus{border-color:var(--gold);}
 .cp-input-row span{font-size:13px;color:var(--mid);}
-.cp-scale{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.cp-scale{margin-top:14px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
 .cp-zone{border-radius:5px;padding:8px 10px;text-align:center;font-size:11.5px;line-height:1.4;}
 .cp-zone strong{display:block;font-size:15px;margin-bottom:2px;}
 .z-red{background:#FDECEA;color:#8B2E2E;}
 .z-orange{background:#FEF3E2;color:#7A4A0A;}
 .z-yellow{background:#FEFCE8;color:#6B5500;}
 .z-green{background:#EDFBF3;color:#1A5C38;}
+.z-teal{background:#E3F4EF;color:#0F5A45;}
 .sebq-item{background:var(--section-bg);border-radius:6px;padding:14px 16px;margin-bottom:10px;}
 .sebq-item label{font-size:13.5px;font-weight:400;margin-bottom:10px;display:block;color:var(--charcoal);}
 .sebq-item label em{display:block;font-size:12px;color:var(--mid);margin-top:3px;font-style:italic;}
@@ -299,14 +300,14 @@ body.lang-en .section-subtitle{color:var(--charcoal);font-size:14px;font-weight:
   <div class="section-header">
     <div class="section-num">3</div>
     <div>
-      <div class="section-title">Pause Contrôle (Steps Test)</div>
+      <div class="section-title">Indice de confort respiratoire (Step Test)</div>
       <div class="section-subtitle">Évaluation fonctionnelle de la respiration · Functional breathing assessment</div>
     </div>
   </div>
 
   <div class="cp-box">
-    <p>La Pause Contrôle mesure votre tolérance fonctionnelle au CO<sub>2</sub> et reflète votre patron respiratoire de base. Réalisez le test dans le calme, après une expiration normale par le nez.<br>
-    <em style="font-size:12px;">The Control Pause measures your functional CO<sub>2</sub> tolerance and reflects your baseline breathing pattern. Perform the test calmly, after a normal nasal exhale.</em></p>
+    <p>L'indice de confort respiratoire est un repère simple de votre confort respiratoire au repos. Il nous permettra de suivre vos progrès. Réalisez le test dans le calme, après une expiration normale par le nez.<br>
+    <em style="font-size:12px;">The Breathing Comfort Index is a simple marker of your breathing comfort at rest. It will help us follow your progress. Perform the test calmly, after a normal nasal exhale.</em></p>
     <div class="cp-protocol">
       <strong>Protocole / Protocol:</strong><br>
       1. Respirez normalement par le nez pendant 1–2 minutes. <em style="font-size:12px;color:var(--mid)">Breathe normally through your nose for 1–2 minutes.</em><br>
@@ -319,10 +320,11 @@ body.lang-en .section-subtitle{color:var(--charcoal);font-size:14px;font-weight:
       <span>secondes / seconds</span>
     </div>
     <div class="cp-scale">
-      <div class="cp-zone z-red"><strong>&lt; 10s</strong>Dysfonction sévère<br><em style="font-size:10px;">Severe dysfunction</em></div>
-      <div class="cp-zone z-orange"><strong>10–20s</strong>Dysfonction modérée<br><em style="font-size:10px;">Moderate dysfunction</em></div>
-      <div class="cp-zone z-yellow"><strong>20–30s</strong>Légère<br><em style="font-size:10px;">Mild</em></div>
-      <div class="cp-zone z-green"><strong>&gt; 40s</strong>Optimal<br><em style="font-size:10px;">Optimal</em></div>
+      <div class="cp-zone z-red"><strong>&lt; 10s</strong>Point de départ<br><em style="font-size:10px;">Starting point</em></div>
+      <div class="cp-zone z-orange"><strong>10–19s</strong>À développer<br><em style="font-size:10px;">Developing</em></div>
+      <div class="cp-zone z-yellow"><strong>20–29s</strong>Intermédiaire<br><em style="font-size:10px;">Intermediate</em></div>
+      <div class="cp-zone z-green"><strong>30–39s</strong>Bon<br><em style="font-size:10px;">Good</em></div>
+      <div class="cp-zone z-teal"><strong>40s +</strong>Très bon<br><em style="font-size:10px;">Very good</em></div>
     </div>
     <div class="hint" style="margin-top:12px;">Si vous n'avez pas encore fait le test, laissez vide — nous le ferons ensemble lors de la séance.<br><em>If you haven't done the test yet, leave blank — we will do it together during the session.</em></div>
   </div>
@@ -805,7 +807,7 @@ body.lang-en .section-subtitle{color:var(--charcoal);font-size:14px;font-weight:
     Questionnaire de Nijmegen — Van Dixhoorn &amp; Duivenvoorden (1985). <em>Journal of Psychosomatic Research.</em><br>
     Self-Evaluation of Breathing Questionnaire (SEBQ) — Courtney &amp; Greenwood (2009). <em>International Journal of Osteopathic Medicine.</em><br>
     Perceived Breath Mastery Scale (PBM-S) — Darkins, R.J. (2024). <em>Australian Catholic University.</em><br>
-    Control Pause protocol — McKeown, P. (2015). <em>The Oxygen Advantage.</em> Hay House.<br><br>
+    Indice de confort respiratoire / Breathing Comfort Index : protocole adapté de McKeown, P. (2015). <em>The Oxygen Advantage.</em> Hay House.<br><br>
     <span style="color:#5a5248;">© Breathavia · hello@breathavia.com · breathavia.com</span>
   </div>
 </footer>
@@ -873,7 +875,7 @@ function getRadio(name){const sel=document.querySelector(`input[name="${name}"]:
 function getChecks(name){const c=[...document.querySelectorAll(`input[name="${name}"]:checked`)].map(e=>e.value);return c.length?c.join(', '):'—';}
 function getSlider(name){const el=document.querySelector(`input[name="${name}"]`);return el?el.value+' / 100':'—';}
 function getNQScore(){let t=0,f=0;for(let i=1;i<=16;i++){const s=document.querySelector(`input[name="nq${i}"]:checked`);if(s){t+=parseInt(s.value);f++;}}return f>0?t+' / 64':'—';}
-function cpZone(s){if(s===''||isNaN(s))return'Non complété';const n=parseInt(s);if(n<10)return'Dysfonction sévère / Severe';if(n<20)return'Dysfonction modérée / Moderate';if(n<30)return'Légère / Mild';if(n>=40)return'Optimal';return'30–39s';}
+function cpZone(s){if(s===''||isNaN(s))return'Non complété / Not completed';const n=parseInt(s);if(n<10)return'Point de départ / Starting point';if(n<20)return'À développer / Developing';if(n<30)return'Intermédiaire / Intermediate';if(n<40)return'Bon / Good';return'Très bon / Very good';}
 
 function generatePDF(){
   const {jsPDF}=window.jspdf;
@@ -966,7 +968,7 @@ function generatePDF(){
   y+=3;
 
   // S3
-  secHead(3,'Pause Contrôle / Control Pause','Steps Test');
+  secHead(3,'Indice de confort respiratoire (Step Test)','Breathing Comfort Index');
   const cp=getVal('cp_score');
   row('Score (secondes / seconds)',cp==='—'?'Non complété':cp+'s',true);
   row('Zone / Category',cpZone(cp),false);
@@ -1098,7 +1100,7 @@ function generatePDF(){
   doc.text('Nijmegen Questionnaire — Van Dixhoorn & Duivenvoorden (1985)',mg,y);y+=4;
   doc.text('SEBQ — Courtney & Greenwood (2009). International Journal of Osteopathic Medicine.',mg,y);y+=4;
   doc.text('PBM-S — Darkins, R.J. (2024). Australian Catholic University.',mg,y);y+=4;
-  doc.text('Control Pause — McKeown, P. (2015). The Oxygen Advantage. Hay House.',mg,y);y+=6;
+  doc.text('Indice de confort respiratoire : protocole adapte de McKeown, P. (2015). The Oxygen Advantage. Hay House.',mg,y);y+=6;
   doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...GOLD);
   doc.text('© Breathavia · hello@breathavia.com · breathavia.com',pW/2,y,{align:'center'});
 
